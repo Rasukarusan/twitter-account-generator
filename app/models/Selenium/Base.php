@@ -6,6 +6,10 @@ use Facebook\WebDriver\WebDriverSelect;
 use Facebook\WebDriver\WebDriverKeys;
 // use Facebook\WebDriver\WebDriverAlert;
 
+/**
+ * Seleniumのメソッドをラップしたクラス
+ * models/Broser内のクラスは基本的に本クラスを継承して使用する
+ */
 class Models_Selenium_Base {
 
     protected $driver;
