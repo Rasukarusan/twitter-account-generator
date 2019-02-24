@@ -135,6 +135,19 @@ class Models_Twitter extends Models_Selenium_Base {
     }
 
     /**
+     * YahooからTwitterの認証コードを取得する
+     * 
+     * @return string
+     */
+    private function getAuthCodeFromYahoo($is_retry) {
+        // リトライ処理の場合、既にログイン済みなので認証コードの取得のみ行う
+        $yahoo = new Models_Browser_Yahoo($this->driver);
+        if($is_retry) return $yahoo->getAuthCode(); 
+        $yahoo->login();
+        return $yahoo->getAuthCode();
+    }
+
+    /**
      * パスワードを設定
      * 
      * @return void
