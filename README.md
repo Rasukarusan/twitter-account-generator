@@ -1,17 +1,16 @@
-# php-selenium-base
-php selenium baby.
+# twitter-account-generator
+Twitterアカウント自動作成
+Twitter accounts generate automation by selenium.
 
 # Usage
 
 ```sh
-# headless
-$ php batch/run.php 1
-
-# non-headless
+$ git clone https://github.com/Rasukarusan/twitter-account-generator.git
+$ cd twitter-account-generator
 $ php batch/run.php
 ```
 
-# Example
+# Setting
 
 Edit account.json
 ```sh
@@ -25,31 +24,7 @@ $ vim account.json
 }
 ```
 
-Edit MainController.php
-```sh
-$ vim app/controllers/MainController.php
-```
+# Warning 
 
-```php
-<?php
-require_once dirname(__FILE__) .'/../models/Selenium/Webdriver.php';
-require_once dirname(__FILE__) .'/../models/Browsers/Gmail.php';
-
-class MainController {
-
-    private $is_headless;
-
-    function __construct($is_headless) {
-        $this->is_headless = $is_headless;
-    }
-
-    public function main() {
-        $driver = Models_Webdriver::create($this->is_headless);
-        // Gmail login. Edit account.json before you run.
-        $gmail = new Models_Browser_Gmail($driver);
-        $gmail->login();
-        $driver->quit();
-    }
-}
-```
-
+We can create **3** accounts by one mail_address. You need phone number auth over 3 accounts. 
+So if you need many mail_addresses.
