@@ -1,0 +1,3 @@
+account.json
+/log/*
+!/log/.gitkeep
