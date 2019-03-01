@@ -1,0 +1,17 @@
+{
+    "Gmail" : {
+        "user_id" : "XXXXXXXX",
+        "password"  : "XXXXXXXXX",
+        "re_setting_email" : "XXXXXXXXX"
+    },
+    "Yahoo" : {
+        "user_id" : "XXXXXXXXX",
+        "password"  : "XXXXXXXXX",
+        "re_setting_email" : "XXXXXXXXX",
+        "safety_base_name" : "XXXXXXXXX",
+        "safety_mail_address" : {
+            "XXXXXXXXX",
+            "XXXXXXXXX"
+        }
+    }
+}
