@@ -6,20 +6,22 @@ require_once dirname(__FILE__) . '/Base.php';
  */
 class Models_Account_Yahoo extends Models_Account_Base {
 
-    private $re_setting_email = '';
+    const SERVICE_KEY = 'Yahoo';
+    public $accounts;
 
     function __construct() {
-        $account = $this->getAccount('Yahoo');
-        $this->re_setting_email = $account['re_setting_email'];
-        parent::__construct($account['user_id'], $account['password']);
+        $this->accounts = $this->getAccounts(self::SERVICE_KEY);
     }
 
     /**
-     * 確認用の再設定メールアドレスを取得する
+     * 指定したサービスのアカウント情報を取得
      * 
-     * @return string
+     * @param mixed $service_key 
+     * @return stdClass
      */
-    public function getReSettingEmail() {
-        return $this->re_setting_email;
+    private function getAccounts($service_key) {
+        $json = file_get_contents(PATH_ACCOUNT_JSON);
+        $account = json_decode($json);
+        return $account->$service_key;
     }
 }
