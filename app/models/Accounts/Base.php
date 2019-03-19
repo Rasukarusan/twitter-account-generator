@@ -25,11 +25,11 @@ class Models_Account_Base {
      * 指定したサービスのアカウント情報を取得
      * 
      * @param mixed $service_key 
-     * @return array
+     * @return stdClass
      */
     protected function getAccount($service_key) {
         $json = file_get_contents(PATH_ACCOUNT_JSON);
-        $account = json_decode($json, true);
+        $account = json_decode($json);
         return $account[$service_key];
     }
 }

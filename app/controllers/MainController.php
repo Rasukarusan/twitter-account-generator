@@ -1,12 +1,14 @@
 <?php
 require_once dirname(__FILE__) .'/../models/Selenium/Webdriver.php';
 require_once dirname(__FILE__) .'/../models/Browsers/Twitter.php';
+require_once dirname(__FILE__) .'/../models/Browsers/Yahoo.php';
+require_once dirname(__FILE__) .'/../models/Accounts/Yahoo.php';
 
 class MainController {
 
-    // 作成するユーザー数
-    // 1つのメールアドレスで登録できるのは3つまで。
-    const GENERATE_USER_CNT = 3; 
+    // 作成するユーザー数  
+    // 1つのメールアドレスで登録できるのは3つまで。 
+    const GENERATE_USER_CNT = 3;
 
     private $is_headless;
 
@@ -17,17 +19,19 @@ class MainController {
     public function main() {
         // ブラウザ起動
         $driver = Models_Webdriver::create($this->is_headless);
-        // twitterで新規アカウント作成
+        $yahoo = new Models_Browser_Yahoo($driver);
+        $model_yahoo_account = new Models_Account_Yahoo();
         $twitter = new Models_Twitter($driver);
-        for ($i = 1; $i < self::GENERATE_USER_CNT; $i++) {
-            echo "\n{$i}つ目のユーザー作成中...\n";
-            echo "=======================================================\n";
-            $result = $twitter->signup();
-            $this->writeLog($result);
-            $twitter->setting();
-            echo "=======================================================\n";
+
+        foreach($model_yahoo_account->accounts as $account) {
+            $mail_addresses = $account->safety_mail_address;
+            foreach ($mail_addresses as $mail_address) {
+                $result = $twitter->signup($mail_address, $account->password);
+                $this->writeLog($result);
+                $twitter->setting();
+            }
         }
-        // $driver->quit();
+        $driver->quit();
     }
 
     private function writeLog($result) {
