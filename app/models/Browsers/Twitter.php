@@ -3,6 +3,7 @@ require_once dirname(__FILE__) . '/../Selenium/Base.php';
 require_once dirname(__FILE__) . '/../../../lib/Account.php';
 require_once dirname(__FILE__) . '/../Accounts/Gmail.php';
 require_once dirname(__FILE__) . '/Gmail.php';
+require_once dirname(__FILE__) . '/Factory.php';
 
 class Models_Twitter extends Models_Selenium_Base {
     const BASE = 'https://twitter.com/i'; 
@@ -11,6 +12,7 @@ class Models_Twitter extends Models_Selenium_Base {
     const TEXT_CHANGE_TO_EMAIL = 'かわりにメールアドレスを登録する';
     const TEXT_SUBMIT = '登録する';
     const TEXT_SKIP = '今はしない';
+    const TEXT_SKIP_FOR_NOW = 'Skip for now';
     const TEXT_NEXT = '次へ';
     const TEXT_NO = 'いいえ';
     const TEXT_FETAIL_INPUT_AUTH_CODE = 'コードが間違っています。やりなおしてください。';
@@ -20,8 +22,8 @@ class Models_Twitter extends Models_Selenium_Base {
     private $email;
     private $password;
 
-    public function signup() {
-        $this->regist();
+    public function signup($mail_address, $mail_password) {
+        $this->regist($mail_address);
         $this->createAndMoveTab();
         if(!$this->auth()) {
             echo ERROR_FETAIL_GET_AUTH_CODE . "\n";
@@ -45,7 +47,7 @@ class Models_Twitter extends Models_Selenium_Base {
         $this->setIcon();
         $this->setProfile();
         $this->setContact();
-        $this->setTopic();
+        // $this->setTopic();
         $this->setInicialFollow();
         $this->setNotification();
     }
@@ -55,10 +57,9 @@ class Models_Twitter extends Models_Selenium_Base {
      * 
      * @return void
      */
-    private function regist() {
+    private function regist($email) {
         $this->driver->get(self::BASE. self::SIGNUP);
         $username = Account::createUsername();
-        $email = Account::createEmail('Gmail');
         $this->username = $username;
         $this->email = $email;
         $this->findElementByName('name')->sendKeys($username);
@@ -74,15 +75,13 @@ class Models_Twitter extends Models_Selenium_Base {
      * @return boolean 
      */
     private function auth() {
-        // Gmailから認証コードを取得
         $retry_cnt = 0;
         $is_retry = false;
 
         while($retry_cnt < self::MAX_RETRY_CNT) {
             try {
                 $retry_cnt++;
-                $auth_code = "";
-                $auth_code = $this->getAuthCodeFromGmail($is_retry);
+                $auth_code = $this->getAuthCode('Yahoo');
                 if(is_null($auth_code)) throw new Exception(RETRY_AUTH);
                 // 操作中のタブをtwitterに戻す
                 $tabs = $this->driver->getWindowHandles();
@@ -100,7 +99,33 @@ class Models_Twitter extends Models_Selenium_Base {
             }
         }
         return true;
+    }
 
+    private function getEmail($service_key) {
+        $factory = new Models_Account_Factory();
+        $account_model = $factory->getInstance($service_key);
+        if(is_null($account_model)) return null;
+        $email = $account_model->getEmail();
+        return $auth_code;
+
+    }
+
+    /**
+     * 認証コードを取得する
+     * 
+     * @param string $service_key 
+     * @return mixed 認証コード。認証コードの取得に失敗、またはモデルの生成に失敗した場合、NULLを返す
+     */
+    private function getAuthCode($service_key) {
+        $factory = new Models_Browser_Factory($this->driver);
+        $browser_model = $factory->getInstance($service_key);
+        if(is_null($browser_model)) return null;
+        // FIXME:  Yahoo独自の処理。このままではFactoryクラスを使っている意味がないため修正必須。
+        $main_addr = $browser_model->getMainAddrFromSafetyAddr($this->email);
+        $password = $browser_model->getPasswordFromMainAddr($main_addr);
+        $browser_model->login($main_addr, $password);
+        $auth_code = $browser_model->getAuthCode();
+        return $auth_code;
     }
 
     /**
@@ -119,32 +144,6 @@ class Models_Twitter extends Models_Selenium_Base {
             return false;
         } 
         return true;
-    }
-
-    /**
-     * GmailからTwitterの認証コードを取得する
-     * 
-     * @return string
-     */
-    private function getAuthCodeFromGmail($is_retry) {
-        // リトライ処理の場合、既にログイン済みなので認証コードの取得のみ行う
-        $gmail = new Models_Browser_Gmail($this->driver);
-        if($is_retry) return $gmail->getAuthCode(); 
-        $gmail->login();
-        return $gmail->getAuthCode();
-    }
-
-    /**
-     * YahooからTwitterの認証コードを取得する
-     * 
-     * @return string
-     */
-    private function getAuthCodeFromYahoo($is_retry) {
-        // リトライ処理の場合、既にログイン済みなので認証コードの取得のみ行う
-        $yahoo = new Models_Browser_Yahoo($this->driver);
-        if($is_retry) return $yahoo->getAuthCode(); 
-        $yahoo->login();
-        return $yahoo->getAuthCode();
     }
 
     /**
@@ -217,7 +216,7 @@ class Models_Twitter extends Models_Selenium_Base {
      */
     private function setNotification() {
         // スキップする
-        $this->findElementByXpathText(self::TEXT_SKIP)->click();
+        $this->findElementByXpathText(self::TEXT_SKIP_FOR_NOW)->click();
     }
 
     /**

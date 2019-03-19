@@ -8,6 +8,7 @@ require_once dirname(__FILE__) . '/../Accounts/Yahoo.php';
 class Models_Browser_Yahoo extends Models_Selenium_Base {
 
     const URL_LOGIN = 'https://login.yahoo.co.jp/config/login';
+    const URL_LOGOUT = 'https://login.yahoo.co.jp/config/login?logout=1&.intl=jp&.done=https://mail.yahoo.co.jp&.src=ym';
     const URL_MAIL_BOX = 'https://jp.mg5.mail.yahoo.co.jp/neo/launch';
     const PATTERN_TWITTER_AUTH = '/Twitterを使い始めるにはメールアドレスを確認してください/';
 
@@ -16,14 +17,22 @@ class Models_Browser_Yahoo extends Models_Selenium_Base {
      * 
      * @return void
      */
-    public function login() {
+    public function login($mail_addr, $password) {
         $this->driver->get(self::URL_LOGIN);
-        $yahoo = Models_Account_Yahoo::create();
-        $this->findElementById('username')->sendKeys($yahoo->user_id);
+        $this->findElementById('username')->sendKeys($mail_addr);
         $this->findElementByName('btnNext')->click();
-        $this->findElementById('passwd')->sendKeys($yahoo->password);
+        $this->findElementById('passwd')->sendKeys($password);
         $this->findElementById('btnSubmit')->click();
         $this->waitTitleContains('Yahoo! JAPAN');
+    }
+
+    /**
+     * ログアウト
+     * 
+     * @return void
+     */
+    public function logout() {
+        $this->driver->get(self::URL_LOGOUT);
     }
 
     /**
@@ -51,5 +60,36 @@ class Models_Browser_Yahoo extends Models_Selenium_Base {
         $preview = $this->findElementById('msg-preview')->getText();
         preg_match('/[0-9]{6}/', $preview, $auth_code);
         return array_shift($auth_code);
+    }
+
+    /**
+     * セーフティアドレスの親アドレスを取得する
+     * 
+     * @param string $safety_addr セーフティアドレス
+     * @return string 親アドレス
+     */
+    public function getMainAddrFromSafetyAddr($safety_addr) {
+        $model_yahoo_account = new Models_Account_Yahoo();
+        foreach($model_yahoo_account->accounts as $account) {
+            $mail_addresses = $account->safety_mail_address;
+            foreach ($mail_addresses as $mail_address) {
+                if($mail_address === $safety_addr) return $account->user_id;
+            }
+        }
+        return '';
+    }
+
+    /**
+     * パスワードを取得する 
+     * 
+     * @param string $main_addr 
+     * @return string
+     */
+    public function getPasswordFromMainAddr($main_addr) {
+        $model_yahoo_account = new Models_Account_Yahoo();
+        foreach($model_yahoo_account->accounts as $account) {
+            if($account->user_id === $main_addr) return $account->password;
+        }
+        return '';
     }
 }
